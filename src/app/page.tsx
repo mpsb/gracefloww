@@ -8,7 +8,10 @@ const Home = () => {
             Evangelize and Engage.
           </h1>
           <p className="text-md md:text-lg text-gray-600 max-w-3xl mx-auto">
-            We help Catholic parishes, ministries, and groups in Melbourne connect, grow, and thrive with simple software tools like people directories, bulletin boards, and event management. Gracefloww empowers you to bring people together — wherever they are.
+            We help Catholic parishes, ministries, and groups in Melbourne
+            connect, grow, and thrive with simple software tools like people
+            directories, bulletin boards, and event management. Gracefloww
+            empowers you to bring people together — wherever they are.
           </p>
           <div className="mt-10">
             <a
