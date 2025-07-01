@@ -92,10 +92,12 @@ const ConfessionFinder = () => {
 
       // Wait for the map to load before adding the marker
       map.on("load", () => {
-        new maplibregl.Marker().setLngLat([
+        new maplibregl.Marker()
+          .setLngLat([
             selectedChurch?.longitude ?? 144.946457,
             selectedChurch?.latitude ?? -37.840935,
-          ]).addTo(map);
+          ])
+          .addTo(map);
 
         map.flyTo({
           center: [
@@ -230,21 +232,45 @@ const ConfessionFinder = () => {
                 <strong>Address:</strong> {selectedChurch?.address}
               </p>
               <p>
-                <strong>Phone:</strong> {selectedChurch?.phone}
+                <strong>Phone: </strong>
+                <a
+                  href={`tel:${selectedChurch?.phone}`}
+                  target="_blank"
+                  className="text-yellow-200 underline hover:text-yellow-300 transition-all"
+                >
+                  {selectedChurch?.phone}
+                </a>
               </p>
               <p>
-                <strong>Email:</strong> {selectedChurch?.email}
+                <strong>Email: </strong>
+                <a
+                  href={`mailto:${selectedChurch?.email}`}
+                  target="_blank"
+                  className="text-yellow-200 underline hover:text-yellow-300 transition-all"
+                >
+                  {selectedChurch?.email}
+                </a>
               </p>
               <p>
-                <strong>Website:</strong> {selectedChurch?.website}
+                <strong>Website:</strong>{" "}
+                <a
+                  href={selectedChurch?.website ?? ""}
+                  target="_blank"
+                  className="text-yellow-200 underline hover:text-yellow-300 transition-all"
+                >
+                  {selectedChurch?.website}
+                </a>
               </p>
               <p>
-                <strong>Schedule:</strong> {selectedChurch?.scheduleForToday}
+                <strong>Confession Schedule:</strong>
+                <br />
+                {selectedChurch?.scheduleForToday}
               </p>
               <p>
                 <a
                   href={`https://www.google.com/maps/search/${replaceSpacesWithPlus(selectedChurch?.church ?? "", selectedChurch?.address ?? "")}`}
                   target="_blank"
+                  className="text-yellow-200 underline hover:text-yellow-300 transition-all"
                 >
                   Directions
                 </a>
