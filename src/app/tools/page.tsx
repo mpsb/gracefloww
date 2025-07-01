@@ -10,7 +10,7 @@ const Home = () => {
             Empowering Catholics to Deepen Their Faith and Build Stronger
             Communities.
           </h2>
-          <div className="bg-[#ffe5b8] rounded-lg shadow-md p-6 max-w-md mx-auto mt-8">
+          <div className="bg-container-background-color rounded-lg shadow-md p-6 max-w-md mx-auto mt-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-4 font-display">
               Confession Finder
             </h2>

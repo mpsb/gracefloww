@@ -15,7 +15,7 @@ const Home = () => {
           </p>
           <div className="mt-10">
             <a
-              href="#"
+              href="/tools"
               className="bg-yellow-700 hover:bg-yellow-800 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300"
             >
               Explore our tools

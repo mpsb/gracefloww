@@ -11,6 +11,8 @@
   --font-display: var(--font-bodoni-moda);
   --font-sans: var(--font-dm-sans);
   --font-raleway: var(--font-raleway);
+  --color-container-background-color: #ffe5b8;
+  --color-container-background-color-dark: #d4ae46;
 }
 
 body {

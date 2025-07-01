@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${dmSans.variable} ${raleway.variable} ${bodoniModa.variable} font-sans tracking-tight antialiased`}
+        className={`${dmSans.variable} ${raleway.variable} ${bodoniModa.variable} font-sans tracking-tight antialiased text-gray-600`}
       >
         <header className="shadow-md">
           <div className="container mx-auto p-8">

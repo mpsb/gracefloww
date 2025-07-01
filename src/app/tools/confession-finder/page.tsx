@@ -1,20 +1,202 @@
-const Home = () => {
+"use client";
+
+import { useState, useEffect } from "react";
+
+type ConfessionData = {
+  parish: string | null;
+  church: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  scheduleForToday: string | null;
+} | null;
+
+const confessionData = [
+  {
+    parish: "St Christopher's, Airport West",
+    church: "St Christopher's",
+    address: "34 Roberts Rd Airport West VIC 3042 Australia",
+    phone: "(03) 9338 3793",
+    email: "airportwest@cam.org.au",
+    website: "https://www.melbcatholic.org/s/airportwest",
+    scheduleForToday: "5pm",
+  },
+  {
+    parish: "St Christopher's, Airport West",
+    church: "St Augustine's",
+    address: "100 Harrick Rd Keilor Park VIC 3042 Australia",
+    phone: "(03) 9338 3793",
+    email: "airportwest@cam.org.au",
+    website: "https://www.melbcatholic.org/s/airportwest",
+    scheduleForToday: "",
+  },
+  {
+    parish: "St Theresa's, Albion",
+    church: "St Theresa's",
+    address: "17 Drummartin St Albion VIC 3020 Australia",
+    phone: "(03) 9311 3091",
+    email: "albion@cam.org.au",
+    website: "",
+    scheduleForToday: "",
+  },
+];
+
+const ConfessionFinder = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedChurch, setSelectedChurch] = useState<ConfessionData>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (showModal && !e.target.closest(".modal")) {
+        setShowModal(false);
+      }
+    };
+
+    const handleEscape = (e) => {
+      if (e.key === "Escape" && showModal) {
+        setShowModal(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [showModal]);
+
   return (
-    <div className="min-h-screen">
-      <section className="py-20 text-center">
-        <div className="container mx-auto px-4">
-          <h1 className="text-5xl md:text-6xl font-bold text-yellow-500 mb-6 font-display tracking-tighter">
-            Confession Finder
-          </h1>
-          <p className="text-gray-600 text-lg md:text-xl mb-6">
-            Find nearby Catholic churches in Melbourne offering confession on
-            the day nearest to your location. This tool helps you locate the
-            closest church with available confession times.
-          </p>
+    <>
+      <div className="min-h-screen">
+        <section className="py-20 text-center">
+          <div className="container mx-auto px-8">
+            <h1 className="text-5xl md:text-6xl font-bold text-yellow-500 mb-6 font-display tracking-tighter">
+              Confession Finder
+            </h1>
+            <p className="text-gray-600 text-lg md:text-xl mb-6">
+              Find nearby Catholic churches in Melbourne offering confession on
+              the day nearest to your location. This tool helps you locate the
+              closest church with available confession times.
+            </p>
+          </div>
+          <div>
+            <div className="relative w-full mx-auto container p-8">
+              <input
+                type="text"
+                className="w-full pr-10 py-2 pl-4 border-2 border-yellow-600 rounded p-2 text-gray-600 focus:outline-2 focus:outline-yellow-500"
+                placeholder="Type in your current location..."
+              />
+              <img
+                src="/search.svg"
+                className="absolute right-11 top-11 h-5 w-5 text-gray-500"
+              />
+            </div>
+            <div className="flex flex-col justify-center items-center gap-4 2xl:max-w-[1472px] xl:max-w-[1216px] lg:max-w-[960px] md:max-w-[704px] max-w-[576px] sm:mx-auto mx-8">
+              {confessionData.map((record, index) => (
+                <div
+                  className="text-black bg-container-background-color rounded-lg shadow-md p-4 w-full flex justify-between items-center text-sm cursor-pointer gap-4 hover:bg-container-background-color-dark transition-colors"
+                  onClick={() => {
+                    setSelectedChurch(record);
+                    setShowModal(true);
+                  }}
+                  key={`confession-data-${index}`}
+                >
+                  <div className="flex flex-col items-start text-left">
+                    <span className="font-bold">{record.church}</span>
+                    <span className="font-medium text-gray-500">
+                      {record.parish}
+                    </span>
+                  </div>
+                  <span className="font-bold">
+                    {record.scheduleForToday ? (
+                      `Today, ${record.scheduleForToday}`
+                    ) : (
+                      <span className="text-xs">
+                        No schedule today.
+                        <br />
+                        Call{" "}
+                        <a
+                          href={`tel:${record.phone}`}
+                          target="_blank"
+                          className="underline hover:text-gray-500 transition-all duration-300"
+                        >
+                          {record.phone}
+                        </a>{" "}
+                        to schedule.
+                        {record.website ? (
+                          <>
+                            <br />
+                            Check the{" "}
+                            <a
+                              href={record.website}
+                              target="_blank"
+                              className="underline hover:text-gray-500 transition-all duration-300"
+                            >
+                              website
+                            </a>{" "}
+                            for office hours.
+                          </>
+                        ) : (
+                          ""
+                        )}
+                      </span>
+                    )}
+                  </span>
+                  <img src="/arrow-right.svg" width={20} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+      {showModal && (
+        <div className="fixed inset-0 bg-blur-sm backdrop-blur-xs flex items-center justify-center z-50 transition-opacity duration-300">
+          <div className="modal rounded-lg shadow-lg max-w-lg w-full p-6 bg-container-background-color-dark">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">{selectedChurch?.church}</h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-white hover:text-gray-300 cursor-pointer transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill="currentColor"
+                    d="m3.219 2.154l6.778 6.773l6.706-6.705c.457-.407.93-.164 1.119.04a.777.777 0 0 1-.044 1.035l-6.707 6.704l6.707 6.702c.298.25.298.74.059 1.014c-.24.273-.68.431-1.095.107l-6.745-6.749l-6.753 6.752c-.296.265-.784.211-1.025-.052c-.242-.264-.334-.72-.025-1.042l6.729-6.732l-6.701-6.704c-.245-.27-.33-.764 0-1.075c.33-.311.822-.268.997-.068Z"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <p>
+                <strong>Address:</strong> {selectedChurch?.address}
+              </p>
+              <p>
+                <strong>Phone:</strong> {selectedChurch?.phone}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedChurch?.email}
+              </p>
+              <p>
+                <strong>Website:</strong> {selectedChurch?.website}
+              </p>
+              <p>
+                <strong>Schedule:</strong> {selectedChurch?.scheduleForToday}
+              </p>
+            </div>
+          </div>
         </div>
-      </section>
-    </div>
+      )}
+    </>
   );
 };
 
-export default Home;
+export default ConfessionFinder;
