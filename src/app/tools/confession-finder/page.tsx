@@ -1,5 +1,6 @@
 "use client";
 
+import maplibregl from "maplibre-gl";
 import { useState, useEffect } from "react";
 
 type ConfessionData = {
@@ -10,6 +11,8 @@ type ConfessionData = {
   email: string | null;
   website: string | null;
   scheduleForToday: string | null;
+  longitude: number | null;
+  latitude: number | null;
 } | null;
 
 const confessionData = [
@@ -21,6 +24,8 @@ const confessionData = [
     email: "airportwest@cam.org.au",
     website: "https://www.melbcatholic.org/s/airportwest",
     scheduleForToday: "5pm",
+    longitude: 144.8799072,
+    latitude: -37.7257905,
   },
   {
     parish: "St Christopher's, Airport West",
@@ -30,6 +35,8 @@ const confessionData = [
     email: "airportwest@cam.org.au",
     website: "https://www.melbcatholic.org/s/airportwest",
     scheduleForToday: "",
+    longitude: 144.8467444,
+    latitude: -37.7239853,
   },
   {
     parish: "St Theresa's, Albion",
@@ -39,8 +46,15 @@ const confessionData = [
     email: "albion@cam.org.au",
     website: "",
     scheduleForToday: "",
+    longitude: 144.8197754,
+    latitude: -37.7823837,
   },
 ];
+
+function replaceSpacesWithPlus(church: string, address: string): string {
+  const combinedAddress = church + " Church " + address;
+  return combinedAddress.replace(/ /g, "+");
+}
 
 const ConfessionFinder = () => {
   const [showModal, setShowModal] = useState(false);
@@ -59,12 +73,48 @@ const ConfessionFinder = () => {
       }
     };
 
+    let map: maplibregl.Map;
+
+    if (showModal && selectedChurch) {
+      map = new maplibregl.Map({
+        container: "map", // container id
+        style:
+          "https://api.maptiler.com/maps/openstreetmap/style.json?key=Gg9G27Gs6exqgEIvMBgx",
+        center: [
+          selectedChurch?.longitude ?? 144.946457,
+          selectedChurch?.latitude ?? -37.840935,
+        ], // starting position [lng, lat]
+        zoom: 10, // starting zoom
+      });
+
+      console.log("selectedChurch?.longitude", selectedChurch?.longitude);
+      console.log("selectedChurch?.latitude", selectedChurch?.latitude);
+
+      // Wait for the map to load before adding the marker
+      map.on("load", () => {
+        new maplibregl.Marker().setLngLat([
+            selectedChurch?.longitude ?? 144.946457,
+            selectedChurch?.latitude ?? -37.840935,
+          ]).addTo(map);
+
+        map.flyTo({
+          center: [
+            selectedChurch?.longitude ?? 144.946457,
+            selectedChurch?.latitude ?? -37.840935,
+          ],
+          zoom: 15,
+          duration: 1500,
+        });
+      });
+    }
+
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("keydown", handleEscape);
 
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keydown", handleEscape);
+      map?.remove();
     };
   }, [showModal]);
 
@@ -191,6 +241,15 @@ const ConfessionFinder = () => {
               <p>
                 <strong>Schedule:</strong> {selectedChurch?.scheduleForToday}
               </p>
+              <p>
+                <a
+                  href={`https://www.google.com/maps/search/${replaceSpacesWithPlus(selectedChurch?.church ?? "", selectedChurch?.address ?? "")}`}
+                  target="_blank"
+                >
+                  Directions
+                </a>
+              </p>
+              <div id="map" className="w-full h-[240px]"></div>
             </div>
           </div>
         </div>
