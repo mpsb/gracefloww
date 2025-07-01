@@ -47,13 +47,13 @@ const ConfessionFinder = () => {
   const [selectedChurch, setSelectedChurch] = useState<ConfessionData>(null);
 
   useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (showModal && !e.target.closest(".modal")) {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (showModal && !(e.target as Element).closest(".modal")) {
         setShowModal(false);
       }
     };
 
-    const handleEscape = (e) => {
+    const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && showModal) {
         setShowModal(false);
       }
