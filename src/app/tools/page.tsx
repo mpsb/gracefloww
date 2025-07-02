@@ -20,7 +20,7 @@ const Home = () => {
               church with available confession times.
             </p>
             <a
-              href="/tools/confession-finder"
+              href="/tools/catholic-confession-finder"
               className="inline-block bg-yellow-700 hover:bg-yellow-800 text-white px-6 py-3 rounded-lg transition duration-200 font-bold"
             >
               Find a confession near you

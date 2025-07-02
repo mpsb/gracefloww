@@ -121,8 +121,6 @@ const ConfessionFinder = () => {
 
   useEffect(() => {
     if (isLocationButtonClicked && currentLocation) {
-      console.log("isLocationButtonClicked", isLocationButtonClicked);
-      console.log("currentLocation", currentLocation);
       fetchConfessionsForToday().then((data) => {
         const currentDayColumnString = buildDayColumnString(new Date());
         const processedData: ProcessedConfessionData[] | undefined = data?.map(
@@ -173,12 +171,12 @@ const ConfessionFinder = () => {
         <section className="py-20 text-center">
           <div className="container mx-auto px-8">
             <h1 className="text-5xl md:text-6xl font-bold text-yellow-500 mb-6 font-display tracking-tighter">
-              Confession Finder
+              Catholic Confession Finder
             </h1>
             <p className="text-gray-600 text-lg md:text-xl mb-6">
               Find nearby Catholic churches in Melbourne offering confession on
               the day nearest to your location. This tool helps you locate the
-              closest church with available confession times.
+              closest church with available reconcilation times.
             </p>
           </div>
           <div>
@@ -186,6 +184,7 @@ const ConfessionFinder = () => {
               <button
                 onClick={handleLocation}
                 className="w-full py-3 px-4 text-lg font-bold text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition cursor-pointer bg-yellow-700 hover:bg-yellow-800 mb-2"
+                disabled={isLoading}
               >
                 {isLoading ? (
                   <div className="text-white flex items-center justify-center">
@@ -237,7 +236,7 @@ const ConfessionFinder = () => {
                     </svg>
                   </div>
                 ) : (
-                  "Get my location & find confession"
+                  "Get my location & find confession times"
                 )}
               </button>
               <span className="text-xs text-gray-400">
