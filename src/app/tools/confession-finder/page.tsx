@@ -1,55 +1,23 @@
 "use client";
 
 import maplibregl from "maplibre-gl";
+import Head from "next/head";
 import { useState, useEffect } from "react";
 
-type ConfessionData = {
+import { buildDayColumnString } from "@/utils/date";
+import { fetchConfessionsForToday } from "@/utils/supabase";
+
+type ProcessedConfessionData = {
   parish: string | null;
   church: string | null;
   address: string | null;
   phone: string | null;
   email: string | null;
   website: string | null;
-  scheduleForToday: string | null;
   longitude: number | null;
   latitude: number | null;
+  scheduleForToday: string | null;
 } | null;
-
-const confessionData = [
-  {
-    parish: "St Christopher's, Airport West",
-    church: "St Christopher's",
-    address: "34 Roberts Rd Airport West VIC 3042 Australia",
-    phone: "(03) 9338 3793",
-    email: "airportwest@cam.org.au",
-    website: "https://www.melbcatholic.org/s/airportwest",
-    scheduleForToday: "5pm",
-    longitude: 144.8799072,
-    latitude: -37.7257905,
-  },
-  {
-    parish: "St Christopher's, Airport West",
-    church: "St Augustine's",
-    address: "100 Harrick Rd Keilor Park VIC 3042 Australia",
-    phone: "(03) 9338 3793",
-    email: "airportwest@cam.org.au",
-    website: "https://www.melbcatholic.org/s/airportwest",
-    scheduleForToday: "",
-    longitude: 144.8467444,
-    latitude: -37.7239853,
-  },
-  {
-    parish: "St Theresa's, Albion",
-    church: "St Theresa's",
-    address: "17 Drummartin St Albion VIC 3020 Australia",
-    phone: "(03) 9311 3091",
-    email: "albion@cam.org.au",
-    website: "",
-    scheduleForToday: "",
-    longitude: 144.8197754,
-    latitude: -37.7823837,
-  },
-];
 
 function replaceSpacesWithPlus(church: string, address: string): string {
   const combinedAddress = church + " Church " + address;
@@ -58,7 +26,11 @@ function replaceSpacesWithPlus(church: string, address: string): string {
 
 const ConfessionFinder = () => {
   const [showModal, setShowModal] = useState(false);
-  const [selectedChurch, setSelectedChurch] = useState<ConfessionData>(null);
+  const [selectedChurch, setSelectedChurch] =
+    useState<ProcessedConfessionData | undefined>(null);
+  const [confessionData, setConfessionData] = useState<
+    ProcessedConfessionData[] | undefined
+  >(undefined);
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -86,9 +58,6 @@ const ConfessionFinder = () => {
         ], // starting position [lng, lat]
         zoom: 10, // starting zoom
       });
-
-      console.log("selectedChurch?.longitude", selectedChurch?.longitude);
-      console.log("selectedChurch?.latitude", selectedChurch?.latitude);
 
       // Wait for the map to load before adding the marker
       map.on("load", () => {
@@ -120,8 +89,32 @@ const ConfessionFinder = () => {
     };
   }, [showModal]);
 
+  useEffect(() => {
+    fetchConfessionsForToday().then((data) => {
+      const currentDayColumnString = buildDayColumnString(new Date());
+      const processedData: ProcessedConfessionData[] | undefined = data?.map((record) => ({
+          parish: record.parish,
+          church: record.church,
+          address: record.address,
+          phone: record.phone,
+          email: record.email,
+          website: record.website,
+          longitude: record.longitude,
+          latitude: record.latitude,
+          scheduleForToday: record[currentDayColumnString],
+      }));
+      setConfessionData(processedData);
+    });
+  }, []);
+
   return (
     <>
+      <Head>
+        <link
+          href="https://unpkg.com/maplibre-gl@^5.6.0/dist/maplibre-gl.css"
+          rel="stylesheet"
+        />
+      </Head>
       <div className="min-h-screen">
         <section className="py-20 text-center">
           <div className="container mx-auto px-8">
@@ -147,59 +140,61 @@ const ConfessionFinder = () => {
               />
             </div>
             <div className="flex flex-col justify-center items-center gap-4 2xl:max-w-[1472px] xl:max-w-[1216px] lg:max-w-[960px] md:max-w-[704px] max-w-[576px] sm:mx-auto mx-8">
-              {confessionData.map((record, index) => (
-                <div
-                  className="text-black bg-container-background-color rounded-lg shadow-md p-4 w-full flex justify-between items-center text-sm cursor-pointer gap-4 hover:bg-container-background-color-dark transition-colors"
-                  onClick={() => {
-                    setSelectedChurch(record);
-                    setShowModal(true);
-                  }}
-                  key={`confession-data-${index}`}
-                >
-                  <div className="flex flex-col items-start text-left">
-                    <span className="font-bold">{record.church}</span>
-                    <span className="font-medium text-gray-500">
-                      {record.parish}
-                    </span>
-                  </div>
-                  <span className="font-bold">
-                    {record.scheduleForToday ? (
-                      `Today, ${record.scheduleForToday}`
-                    ) : (
-                      <span className="text-xs">
-                        No schedule today.
-                        <br />
-                        Call{" "}
-                        <a
-                          href={`tel:${record.phone}`}
-                          target="_blank"
-                          className="underline hover:text-gray-500 transition-all duration-300"
-                        >
-                          {record.phone}
-                        </a>{" "}
-                        to schedule.
-                        {record.website ? (
-                          <>
+              {confessionData
+                ? confessionData.map((record, index) => (
+                    <div
+                      className="text-black bg-container-background-color rounded-lg shadow-md p-4 w-full flex justify-between items-center text-sm cursor-pointer gap-4 hover:bg-container-background-color-dark transition-colors"
+                      onClick={() => {
+                        setSelectedChurch(record);
+                        setShowModal(true);
+                      }}
+                      key={`confession-data-${index}`}
+                    >
+                      <div className="flex flex-col items-start text-left">
+                        <span className="font-bold">{record?.church}</span>
+                        <span className="font-medium text-gray-500">
+                          {record?.parish}
+                        </span>
+                      </div>
+                      <span className="font-bold">
+                        {record?.scheduleForToday ? (
+                          `Today, ${record.scheduleForToday}`
+                        ) : (
+                          <span className="text-xs">
+                            No schedule today.
                             <br />
-                            Check the{" "}
+                            Call{" "}
                             <a
-                              href={record.website}
+                              href={`tel:${record?.phone}`}
                               target="_blank"
                               className="underline hover:text-gray-500 transition-all duration-300"
                             >
-                              website
+                              {record?.phone}
                             </a>{" "}
-                            for office hours.
-                          </>
-                        ) : (
-                          ""
+                            to schedule.
+                            {record?.website ? (
+                              <>
+                                <br />
+                                Check the{" "}
+                                <a
+                                  href={record.website}
+                                  target="_blank"
+                                  className="underline hover:text-gray-500 transition-all duration-300"
+                                >
+                                  website
+                                </a>{" "}
+                                for office hours.
+                              </>
+                            ) : (
+                              ""
+                            )}
+                          </span>
                         )}
                       </span>
-                    )}
-                  </span>
-                  <img src="/arrow-right.svg" width={20} />
-                </div>
-              ))}
+                      <img src="/arrow-right.svg" width={20} />
+                    </div>
+                  ))
+                : null}
             </div>
           </div>
         </section>
