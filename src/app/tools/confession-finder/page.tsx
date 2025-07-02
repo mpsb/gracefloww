@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 import { buildDayColumnString } from "@/utils/date";
 import { fetchConfessionsForToday } from "@/utils/supabase";
 
+import '@/css/maplibre-gl.css';
+
 type ProcessedConfessionData = {
   parish: string | null;
   church: string | null;
