@@ -17,8 +17,8 @@ export type Database = {
           email: string | null;
           friday_times: string | null;
           id: number;
-          latitude: number | null;
-          longitude: number | null;
+          latitude: number;
+          longitude: number;
           monday_times: string | null;
           parish: string | null;
           phone: string | null;
@@ -36,8 +36,8 @@ export type Database = {
           email?: string | null;
           friday_times?: string | null;
           id?: number;
-          latitude?: number | null;
-          longitude?: number | null;
+          latitude: number;
+          longitude: number;
           monday_times?: string | null;
           parish?: string | null;
           phone?: string | null;
@@ -55,8 +55,8 @@ export type Database = {
           email?: string | null;
           friday_times?: string | null;
           id?: number;
-          latitude?: number | null;
-          longitude?: number | null;
+          latitude?: number;
+          longitude?: number;
           monday_times?: string | null;
           parish?: string | null;
           phone?: string | null;

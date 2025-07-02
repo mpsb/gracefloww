@@ -5,9 +5,11 @@ import Head from "next/head";
 import { useState, useEffect } from "react";
 
 import { buildDayColumnString } from "@/utils/date";
+import { haversineDistance } from "@/utils/math";
+import { formatTimeIfNoLetters, replaceSpacesWithPlus } from "@/utils/string";
 import { fetchConfessionsForToday } from "@/utils/supabase";
 
-import '@/css/maplibre-gl.css';
+import "@/css/maplibre-gl.css";
 
 type ProcessedConfessionData = {
   parish: string | null;
@@ -21,18 +23,44 @@ type ProcessedConfessionData = {
   scheduleForToday: string | null;
 } | null;
 
-function replaceSpacesWithPlus(church: string, address: string): string {
-  const combinedAddress = church + " Church " + address;
-  return combinedAddress.replace(/ /g, "+");
-}
-
 const ConfessionFinder = () => {
   const [showModal, setShowModal] = useState(false);
-  const [selectedChurch, setSelectedChurch] =
-    useState<ProcessedConfessionData | undefined>(null);
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLocationButtonClicked, setIsLocationButtonClicked] = useState(false);
+  const [selectedChurch, setSelectedChurch] = useState<
+    ProcessedConfessionData | undefined
+  >(null);
   const [confessionData, setConfessionData] = useState<
     ProcessedConfessionData[] | undefined
   >(undefined);
+
+  const handleLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by this browser.");
+      return;
+    }
+
+    setIsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setCurrentLocation({ lat: latitude, lng: longitude });
+        setLocationError("");
+        setIsLocationButtonClicked(true);
+      },
+      (err) => {
+        setLocationError(`Error getting location: ${err.message}`);
+        setCurrentLocation(null);
+        setIsLocationButtonClicked(false);
+        setIsLoading(false);
+      },
+    );
+  };
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -92,22 +120,46 @@ const ConfessionFinder = () => {
   }, [showModal]);
 
   useEffect(() => {
-    fetchConfessionsForToday().then((data) => {
-      const currentDayColumnString = buildDayColumnString(new Date());
-      const processedData: ProcessedConfessionData[] | undefined = data?.map((record) => ({
-          parish: record.parish,
-          church: record.church,
-          address: record.address,
-          phone: record.phone,
-          email: record.email,
-          website: record.website,
-          longitude: record.longitude,
-          latitude: record.latitude,
-          scheduleForToday: record[currentDayColumnString],
-      }));
-      setConfessionData(processedData);
-    });
-  }, []);
+    if (isLocationButtonClicked && currentLocation) {
+      console.log("isLocationButtonClicked", isLocationButtonClicked);
+      console.log("currentLocation", currentLocation);
+      fetchConfessionsForToday().then((data) => {
+        const currentDayColumnString = buildDayColumnString(new Date());
+        const processedData: ProcessedConfessionData[] | undefined = data?.map(
+          (record) => ({
+            parish: record.parish,
+            church: record.church,
+            address: record.address,
+            phone: record.phone,
+            email: record.email,
+            website: record.website,
+            longitude: record.longitude,
+            latitude: record.latitude,
+            scheduleForToday: formatTimeIfNoLetters(
+              record[currentDayColumnString],
+            ),
+          }),
+        );
+        const sortedData = processedData?.sort((a, b) => {
+          const distA = haversineDistance(
+            a?.latitude,
+            a?.longitude,
+            currentLocation.lat,
+            currentLocation.lng,
+          );
+          const distB = haversineDistance(
+            b?.latitude,
+            b?.longitude,
+            currentLocation.lat,
+            currentLocation.lng,
+          );
+          return distA - distB;
+        });
+        setConfessionData(sortedData?.slice(0, 10));
+        setIsLoading(false);
+      });
+    }
+  }, [isLocationButtonClicked, currentLocation]);
 
   return (
     <>
@@ -131,15 +183,66 @@ const ConfessionFinder = () => {
           </div>
           <div>
             <div className="relative w-full mx-auto container p-8">
-              <input
-                type="text"
-                className="w-full pr-10 py-2 pl-4 border-2 border-yellow-600 rounded p-2 text-gray-600 focus:outline-2 focus:outline-yellow-500"
-                placeholder="Type in your current location..."
-              />
-              <img
-                src="/search.svg"
-                className="absolute right-11 top-11 h-5 w-5 text-gray-500"
-              />
+              <button
+                onClick={handleLocation}
+                className="w-full py-3 px-4 text-lg font-bold text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition cursor-pointer bg-yellow-700 hover:bg-yellow-800 mb-2"
+              >
+                {isLoading ? (
+                  <div className="text-white flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                    >
+                      <g
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeDasharray="60"
+                          strokeDashoffset="60"
+                          strokeOpacity=".3"
+                          d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"
+                        >
+                          <animate
+                            fill="freeze"
+                            attributeName="stroke-dashoffset"
+                            dur="1.3s"
+                            values="60;0"
+                          />
+                        </path>
+                        <path
+                          strokeDasharray="15"
+                          strokeDashoffset="15"
+                          d="M12 3C16.9706 3 21 7.02944 21 12"
+                        >
+                          <animate
+                            fill="freeze"
+                            attributeName="stroke-dashoffset"
+                            dur="0.3s"
+                            values="15;0"
+                          />
+                          <animateTransform
+                            attributeName="transform"
+                            dur="1.5s"
+                            repeatCount="indefinite"
+                            type="rotate"
+                            values="0 12 12;360 12 12"
+                          />
+                        </path>
+                      </g>
+                    </svg>
+                  </div>
+                ) : (
+                  "Get my location & find confession"
+                )}
+              </button>
+              <span className="text-xs text-gray-400">
+                We do not store any of your location data.
+              </span>
             </div>
             <div className="flex flex-col justify-center items-center gap-4 2xl:max-w-[1472px] xl:max-w-[1216px] lg:max-w-[960px] md:max-w-[704px] max-w-[576px] sm:mx-auto mx-8">
               {confessionData
@@ -158,42 +261,44 @@ const ConfessionFinder = () => {
                           {record?.parish}
                         </span>
                       </div>
-                      <span className="font-bold">
-                        {record?.scheduleForToday ? (
-                          `Today, ${record.scheduleForToday}`
-                        ) : (
-                          <span className="text-xs">
-                            No schedule today.
-                            <br />
-                            Call{" "}
-                            <a
-                              href={`tel:${record?.phone}`}
-                              target="_blank"
-                              className="underline hover:text-gray-500 transition-all duration-300"
-                            >
-                              {record?.phone}
-                            </a>{" "}
-                            to schedule.
-                            {record?.website ? (
-                              <>
-                                <br />
-                                Check the{" "}
-                                <a
-                                  href={record.website}
-                                  target="_blank"
-                                  className="underline hover:text-gray-500 transition-all duration-300"
-                                >
-                                  website
-                                </a>{" "}
-                                for office hours.
-                              </>
-                            ) : (
-                              ""
-                            )}
-                          </span>
-                        )}
-                      </span>
-                      <img src="/arrow-right.svg" width={20} />
+                      <div className="flex gap-4">
+                        <span className="font-bold">
+                          {record?.scheduleForToday ? (
+                            `Today, ${record.scheduleForToday}`
+                          ) : (
+                            <span className="text-xs">
+                              No schedule today.
+                              <br />
+                              Call{" "}
+                              <a
+                                href={`tel:${record?.phone}`}
+                                target="_blank"
+                                className="underline hover:text-gray-500 transition-all duration-300"
+                              >
+                                {record?.phone}
+                              </a>{" "}
+                              to schedule.
+                              {record?.website ? (
+                                <>
+                                  <br />
+                                  Check the{" "}
+                                  <a
+                                    href={record.website}
+                                    target="_blank"
+                                    className="underline hover:text-gray-500 transition-all duration-300"
+                                  >
+                                    website
+                                  </a>{" "}
+                                  for office hours.
+                                </>
+                              ) : (
+                                ""
+                              )}
+                            </span>
+                          )}
+                        </span>
+                        <img src="/arrow-right.svg" width={20} />
+                      </div>
                     </div>
                   ))
                 : null}
@@ -259,9 +364,9 @@ const ConfessionFinder = () => {
                 </a>
               </p>
               <p>
-                <strong>Confession Schedule:</strong>
+                <strong>Confession Schedule for Today:</strong>
                 <br />
-                {selectedChurch?.scheduleForToday}
+                {selectedChurch?.scheduleForToday ?? "No schedule."}
               </p>
               <p>
                 <a
